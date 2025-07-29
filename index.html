@@ -57,10 +57,10 @@
       div.className = 'stage';
       div.innerHTML = `
         <input type="checkbox" id="inc${i}" checked>
-        <label for="inc${i}">${stage.name}</label>
-        <input type="text" id="name${i}" value="${stage.name}" size="20" style="margin-left:12px;" placeholder="Stage name">
-        <input type="text" id="dur${i}" value="${stage.duration}" size="5" style="margin-left:12px;" placeholder="Duration">
+        <label for="inc${i}" style="margin-left:8px; margin-right:12px;"><strong>${stage.name}</strong></label>
+        <input type="text" id="dur${i}" value="${stage.duration}" size="5" placeholder="Duration">
       `;
+
       container.appendChild(div);
     });
 
@@ -70,15 +70,24 @@
       const updated = [];
       stages.forEach((stage, i) => {
         if (document.getElementById(`inc${i}`).checked) {
+          const duration = document.getElementById(`dur${i}`).value.trim();
+          const isValidDuration = /^[0-9]+(h|m)$/.test(duration);
+
+          if (!isValidDuration) {
+              alert(`Invalid duration format for "${stage.name}". Please use formats like "30m" or "1h".`);
+              return; // stops submission
+          }
+
           updated.push({
-            name: document.getElementById(`name${i}`).value,
-            duration: document.getElementById(`dur${i}`).value
+            name: stage.name,
+            duration
           });
+
         }
       });
       const startDate = document.getElementById('startDate').value;
       const endDate = document.getElementById('endDate').value;
-      const email = document.getElementById('email').value;
+      const strategistEmail = document.getElementById('email').value;
 
       // POST to your n8n webhook endpoint:
       const response = await fetch('https://tmrwtf.app.n8n.cloud/webhook/submit-stages', {
