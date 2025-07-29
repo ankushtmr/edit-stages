@@ -32,16 +32,20 @@
     <button type="submit">Submit</button>
   </form>
   <div id="status"></div>
+
   <script>
     function getParam(key) {
       return new URLSearchParams(window.location.search).get(key) || '';
     }
+
     function getStagesFromUrl() {
       const params = new URLSearchParams(window.location.search);
       if (!params.has('stages')) return [];
       try {
         return JSON.parse(atob(params.get('stages')));
-      } catch { return []; }
+      } catch {
+        return [];
+      }
     }
 
     // Prefill main fields from URL
@@ -60,7 +64,6 @@
         <label for="inc${i}" style="margin-left:8px; margin-right:12px;"><strong>${stage.name}</strong></label>
         <input type="text" id="dur${i}" value="${stage.duration}" size="5" placeholder="Duration">
       `;
-
       container.appendChild(div);
     });
 
@@ -68,36 +71,38 @@
     document.getElementById('stagesForm').onsubmit = async function(e) {
       e.preventDefault();
       const updated = [];
-      stages.forEach((stage, i) => {
+
+      // ✅ VALIDATION using a for loop so return exits the whole function
+      for (let i = 0; i < stages.length; i++) {
         if (document.getElementById(`inc${i}`).checked) {
           const duration = document.getElementById(`dur${i}`).value.trim();
           const isValidDuration = /^[0-9]+(h|m)$/.test(duration);
 
           if (!isValidDuration) {
-              alert(`Invalid duration format for "${stage.name}". Please use formats like "30m" or "1h".`);
-              return; // stops submission
+            alert(`Invalid duration format for "${stages[i].name}". Please use formats like "30m" or "1h".`);
+            return; // ⛔ Stop form submission
           }
 
           updated.push({
-            name: stage.name,
+            name: stages[i].name,
             duration
           });
-
         }
-      });
+      }
+
       const startDate = document.getElementById('startDate').value;
       const endDate = document.getElementById('endDate').value;
       const strategistEmail = document.getElementById('email').value;
 
-      // POST to your n8n webhook endpoint:
+      // ✅ Send to n8n webhook
       const response = await fetch('https://tmrwtf.app.n8n.cloud/webhook/submit-stages', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           stages: updated,
           startDate,
           endDate,
-          email
+          email: strategistEmail
         })
       });
 
