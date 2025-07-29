@@ -7,17 +7,35 @@
     body { font-family: sans-serif; max-width: 500px; margin: 40px auto; }
     .stage { margin-bottom: 12px; }
     label { margin-right: 8px; }
+    .field { margin-bottom: 10px; }
+    .field label { display: inline-block; width: 120px; }
+    input[type="text"], input[type="email"], input[type="date"] { padding: 4px; }
   </style>
 </head>
 <body>
   <h2>Edit Project Stages</h2>
   <form id="stagesForm">
+    <div class="field">
+      <label for="startDate"><strong>Start Date:</strong></label>
+      <input type="date" id="startDate" name="startDate">
+    </div>
+    <div class="field">
+      <label for="endDate"><strong>End Date:</strong></label>
+      <input type="date" id="endDate" name="endDate">
+    </div>
+    <div class="field">
+      <label for="email"><strong>Strategist Email:</strong></label>
+      <input type="email" id="email" name="email">
+    </div>
+    <hr>
     <div id="stagesContainer"></div>
     <button type="submit">Submit</button>
   </form>
   <div id="status"></div>
   <script>
-    // Get stages from base64 URL param
+    function getParam(key) {
+      return new URLSearchParams(window.location.search).get(key) || '';
+    }
     function getStagesFromUrl() {
       const params = new URLSearchParams(window.location.search);
       if (!params.has('stages')) return [];
@@ -26,37 +44,52 @@
       } catch { return []; }
     }
 
+    // Prefill main fields from URL
+    document.getElementById('startDate').value = getParam('startDate');
+    document.getElementById('endDate').value = getParam('endDate');
+    document.getElementById('email').value = getParam('email');
+
+    // Render stages as checklist
     const stages = getStagesFromUrl();
     const container = document.getElementById('stagesContainer');
-
     stages.forEach((stage, i) => {
       const div = document.createElement('div');
       div.className = 'stage';
       div.innerHTML = `
         <input type="checkbox" id="inc${i}" checked>
         <label for="inc${i}">${stage.name}</label>
-        <input type="text" id="dur${i}" value="${stage.duration}" size="5" style="margin-left:12px;">
+        <input type="text" id="name${i}" value="${stage.name}" size="20" style="margin-left:12px;" placeholder="Stage name">
+        <input type="text" id="dur${i}" value="${stage.duration}" size="5" style="margin-left:12px;" placeholder="Duration">
       `;
       container.appendChild(div);
     });
 
+    // Submission logic
     document.getElementById('stagesForm').onsubmit = async function(e) {
       e.preventDefault();
       const updated = [];
       stages.forEach((stage, i) => {
         if (document.getElementById(`inc${i}`).checked) {
           updated.push({
-            name: stage.name,
+            name: document.getElementById(`name${i}`).value,
             duration: document.getElementById(`dur${i}`).value
           });
         }
       });
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const email = document.getElementById('email').value;
 
       // POST to your n8n webhook endpoint:
       const response = await fetch('https://tmrwtf.app.n8n.cloud/webhook/submit-stages', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ stages: updated })
+        body: JSON.stringify({
+          stages: updated,
+          startDate,
+          endDate,
+          email
+        })
       });
 
       document.getElementById('status').textContent = response.ok
