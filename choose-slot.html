@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Choose Briefing Slot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; max-width: 560px; margin: 40px auto; }
+    .slot { padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; }
+    button { margin-top: 16px; padding: 10px 16px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h2>Select a suitable time</h2>
+  <p>Please pick one time slot and submit.</p>
+
+  <form id="slotForm">
+    <div id="slots"></div>
+    <button type="submit">Submit</button>
+  </form>
+
+  <div id="status" class="hidden"></div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const dataB64 = params.get('data') || '';
+    const webhook = params.get('webhook') || '';
+
+    let payload = { slots: [] };
+    try {
+      payload = JSON.parse(atob(dataB64));
+    } catch (e) {
+      document.getElementById('slots').textContent = 'Invalid link data.';
+    }
+
+    // Render radio list
+    const container = document.getElementById('slots');
+    if (payload.slots && payload.slots.length) {
+      payload.slots.forEach((s, i) => {
+        const id = `slot_${i}`;
+        const wrap = document.createElement('label');
+        wrap.className = 'slot';
+        wrap.innerHTML = `
+          <input type="radio" name="slot" value="${s}" id="${id}" ${i===0?'checked':''}>
+          <span>${s}</span>
+        `;
+        container.appendChild(wrap);
+      });
+    } else {
+      container.textContent = 'No available slots.';
+    }
+
+    document.getElementById('slotForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const selected = document.querySelector('input[name="slot"]:checked');
+      if (!selected) {
+        alert('Please select a slot.');
+        return;
+      }
+      if (!webhook) {
+        alert('Missing submission URL.');
+        return;
+      }
+
+      const btn = e.target.querySelector('button');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(webhook, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ selectedSlot: selected.value })
+        });
+
+        const status = document.getElementById('status');
+        status.classList.remove('hidden');
+        status.textContent = res.ok ? 'Thanks! Your slot has been submitted.' :
+                                      'There was a problem submitting your slot.';
+        if (res.ok) document.getElementById('slotForm').classList.add('hidden');
+      } catch (err) {
+        alert('Network error submitting your slot.');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
