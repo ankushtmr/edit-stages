@@ -46,7 +46,7 @@
     const webhook = 'https://tmrwtf.app.n8n.cloud/webhook/briefing-session';
 
     // Decode payload from n8n (now includes slots, stages, startDate, endDate, projectName)
-    let payload = { slots: [], stages: [], startDate: '', endDate: '', projectName: '' };
+    let payload = { slots: [], stages: [], startDate: '', endDate: '', projectName: '', strategistEmail: '' };
     try {
       payload = JSON.parse(atob(dataB64));
     } catch (e) {
@@ -99,6 +99,7 @@
             projectName: payload.projectName || '',
             startDate: payload.startDate || '',
             endDate: payload.endDate || '',
+            strategistEmail: payload.srategistEmail || '',
             stages: payload.stages || []
           })
         });
