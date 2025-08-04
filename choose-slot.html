@@ -48,7 +48,8 @@
   <script>
     const params = new URLSearchParams(location.search);
     const dataB64 = params.get('data') || '';
-    const webhook = params.get('webhook') || '';
+    const webhook = 'https://tmrwtf.app.n8n.cloud/webhook/briefing-session';
+
 
     let payload = { slots: [] };
     try {
