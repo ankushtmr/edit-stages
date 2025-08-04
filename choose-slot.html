@@ -5,9 +5,32 @@
   <title>Choose Briefing Slot</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: sans-serif; max-width: 560px; margin: 40px auto; }
-    .slot { padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; }
-    button { margin-top: 16px; padding: 10px 16px; }
+    :root { --gap: 10px; }
+    body { font-family: sans-serif; max-width: 560px; margin: 40px auto; padding: 0 12px; }
+    h2 { margin-bottom: 6px; }
+    p { margin-top: 0; color: #444; }
+    /* List container stacks children vertically with consistent gaps */
+    #slots { display: flex; flex-direction: column; gap: var(--gap); margin: 18px 0; }
+    /* Each slot is a full-width block with border and padding */
+    .slot {
+      display: flex;          /* align radio + text nicely */
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      line-height: 1.3;
+      cursor: pointer;
+    }
+    .slot input[type="radio"] { flex: 0 0 auto; }
+    .slot span {
+      flex: 1 1 auto;
+      white-space: normal;    /* allow wrapping on small screens */
+      word-break: break-word;
+    }
+    button { margin-top: 8px; padding: 10px 16px; }
     .hidden { display: none; }
   </style>
 </head>
@@ -34,13 +57,14 @@
       document.getElementById('slots').textContent = 'Invalid link data.';
     }
 
-    // Render radio list
+    // Render radio list vertically
     const container = document.getElementById('slots');
     if (payload.slots && payload.slots.length) {
       payload.slots.forEach((s, i) => {
         const id = `slot_${i}`;
         const wrap = document.createElement('label');
         wrap.className = 'slot';
+        wrap.setAttribute('for', id);
         wrap.innerHTML = `
           <input type="radio" name="slot" value="${s}" id="${id}" ${i===0?'checked':''}>
           <span>${s}</span>
@@ -75,8 +99,9 @@
 
         const status = document.getElementById('status');
         status.classList.remove('hidden');
-        status.textContent = res.ok ? 'Thanks! Your slot has been submitted.' :
-                                      'There was a problem submitting your slot.';
+        status.textContent = res.ok
+          ? 'Thanks! Your slot has been submitted.'
+          : 'There was a problem submitting your slot.';
         if (res.ok) document.getElementById('slotForm').classList.add('hidden');
       } catch (err) {
         alert('Network error submitting your slot.');
